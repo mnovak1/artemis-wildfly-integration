@@ -71,7 +71,6 @@ public class WildFlyActiveMQRecoveryRegistry implements XAResourceRecovery {
     /**
      * This will be called periodically by the Transaction Manager
      */
-    @Override
     public XAResource[] getXAResources() {
         try {
             checkFailures();
@@ -173,32 +172,29 @@ public class WildFlyActiveMQRecoveryRegistry implements XAResourceRecovery {
             String password,
             Map<String, String> properties) {
 
-        XARecoveryConfig config = new XARecoveryConfig(true,
-                networkConfiguration,
-                username,
-                password,
-                properties,
-                listeningConfig.getClientProtocolManager(),
-                listeningConfig.getLocatorConfig());
-        WildFlyActiveMQXAResourceWrapper wrapper = recoveries.get(nodeID);
-        if (wrapper == null) {
+        if (recoveries.get(nodeID) == null) {
             if (WildFlyActiveMQLogger.LOGGER.isDebugEnabled()) {
                 WildFlyActiveMQLogger.LOGGER.debug(nodeID + " being registered towards " + Arrays.toString(networkConfiguration));
             }
+
+            XARecoveryConfig config = new XARecoveryConfig(true,
+                    networkConfiguration,
+                    username,
+                    password,
+                    properties,
+                    listeningConfig.getClientProtocolManager(),
+                    listeningConfig.getLocatorConfig());
+
             ActiveMQXAResourceWrapper xaResource = new ActiveMQXAResourceWrapper(config);
 
-            Map<String, Object> xaResourceProperties = new HashMap<>();
+            Map<String, Object> xaResourceProperties = new HashMap<String, Object>();
             xaResourceProperties.put(org.apache.activemq.artemis.service.extensions.xa.ActiveMQXAResourceWrapper.ACTIVEMQ_JNDI_NAME, properties.get(XARecoveryConfig.JNDI_NAME_PROPERTY_KEY));
             xaResourceProperties.put(org.apache.activemq.artemis.service.extensions.xa.ActiveMQXAResourceWrapper.ACTIVEMQ_NODE_ID, nodeID);
             xaResourceProperties.put(org.apache.activemq.artemis.service.extensions.xa.ActiveMQXAResourceWrapper.ACTIVEMQ_PRODUCT_NAME, PRODUCT_NAME);
             xaResourceProperties.put(org.apache.activemq.artemis.service.extensions.xa.ActiveMQXAResourceWrapper.ACTIVEMQ_PRODUCT_VERSION, VersionLoader.getVersion().getFullVersion());
 
-            wrapper = new WildFlyActiveMQXAResourceWrapper(xaResource, xaResourceProperties);
+            WildFlyActiveMQXAResourceWrapper wrapper = new WildFlyActiveMQXAResourceWrapper(xaResource, xaResourceProperties);
             recoveries.putIfAbsent(nodeID, wrapper);
-        } else {
-            if(networkConfiguration.length >= listeningConfig.getTransportConfig().length) {
-                ((ActiveMQXAResourceWrapper) wrapper.getResource()).updateRecoveryConfig(config);
-            }
         }
     }
 
@@ -217,7 +213,7 @@ public class WildFlyActiveMQRecoveryRegistry implements XAResourceRecovery {
             failedDiscoverySet.clear();
         }
 
-        if (!failures.isEmpty()) {
+        if (failures.size() > 0) {
             // This shouldn't happen on a regular scenario, however when this retry happens this needs
             // to be done on a new thread
             Thread t = new Thread("ActiveMQ Recovery Discovery Reinitialization") {
@@ -236,11 +232,6 @@ public class WildFlyActiveMQRecoveryRegistry implements XAResourceRecovery {
 
             t.start();
         }
-    }
-
-    @Override
-    public String toString() {
-        return "WildFlyActiveMQRecoveryRegistry{" + "configSet=" + configSet + ", recoveries=" + recoveries + ", failedDiscoverySet=" + failedDiscoverySet + '}';
     }
 
 }

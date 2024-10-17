@@ -48,19 +48,16 @@ public class WildFlyActiveMQRegistry implements ActiveMQRegistry {
         this.tmRegistry = tmRegistry;
     }
 
-    @Override
     public void register(final XARecoveryConfig resourceConfig) {
         init();
         WildFlyActiveMQRecoveryRegistry.getInstance().register(resourceConfig);
     }
 
-    @Override
     public void unRegister(final XARecoveryConfig resourceConfig) {
         init();
         WildFlyActiveMQRecoveryRegistry.getInstance().unRegister(resourceConfig);
     }
 
-    @Override
     public void stop() {
         if (started.compareAndSet(true, false) && getTMRegistry() != null) {
             getTMRegistry().removeXAResourceRecovery(WildFlyActiveMQRecoveryRegistry.getInstance());
@@ -68,7 +65,6 @@ public class WildFlyActiveMQRegistry implements ActiveMQRegistry {
         }
     }
 
-    @Override
     public void init() {
         if (started.compareAndSet(false, true) && getTMRegistry() != null) {
             getTMRegistry().addXAResourceRecovery(WildFlyActiveMQRecoveryRegistry.getInstance());
